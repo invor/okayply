@@ -489,7 +489,7 @@ namespace okayply
 	// Property
 	// ---------------------------------------------------------------
 
-	std::vector<std::reference_wrapper<prop>> elem::properties()
+	inline std::vector<std::reference_wrapper<prop>> elem::properties()
 	{
 		std::vector<std::reference_wrapper<prop>> info;
 		for(auto & [n, p] : properties_)
@@ -497,7 +497,7 @@ namespace okayply
 		return info;
 	}
 
-	std::vector<std::string> elem::names() const
+	inline std::vector<std::string> elem::names() const
 	{
 		std::vector<std::string> info;
 		for(auto & [n, p] : properties_)
@@ -505,23 +505,23 @@ namespace okayply
 		return info;
 	}
 
-	void* prop::rawPtr()
+	inline void* prop::rawPtr()
 	{
 		auto & info = *parent_->parent_->info_[tid_].get();
 		return info.rawPtr(data_);
 	}
 
-	std::size_t prop::rawSize()
+	inline std::size_t prop::rawSize()
 	{
 		auto & info = *parent_->parent_->info_[tid_].get();
 		return info.typeSize() * size();
 	}
 
-	std::size_t prop::size() const
+	inline std::size_t prop::size() const
 	{
 		return parent_->size_;
 	}
-	std::string_view prop::name() const
+	inline std::string_view prop::name() const
 	{
 		return parent_->names_.at(this);
 	}
@@ -551,15 +551,15 @@ namespace okayply
 		auto dst = get<T>();
 		std::copy_n(src.begin(), src.size(), dst.begin());
 	}
-	std::type_index prop::listType() const
+	inline std::type_index prop::listType() const
 	{
 		return tid_;
 	}
-	std::type_index prop::type() const
+	inline std::type_index prop::type() const
 	{
 		return parent_->parent_->info_[tid_]->tid();
 	}
-	bool prop::isList() const
+	inline bool prop::isList() const
 	{
 		if(tid_ == typeid(void))
 			throw std::runtime_error("Property::isList cannot be used before type initialization");
@@ -570,12 +570,12 @@ namespace okayply
 	// Element
 	// ---------------------------------------------------------------
 
-	bool elem::has(std::string_view sv) const
+	inline bool elem::has(std::string_view sv) const
 	{
 		return properties_.contains(std::string(sv));
 	}
 
-	prop & elem::operator()(std::string_view name)
+	inline prop & elem::operator()(std::string_view name)
 	{
 		auto [it, inserted] = properties_.try_emplace(std::string(name));
 		if(inserted)
@@ -587,7 +587,7 @@ namespace okayply
 		return it->second;
 	}
 
-	prop & elem::operator()(std::string_view name, std::type_index const & tid)
+	inline prop & elem::operator()(std::string_view name, std::type_index const & tid)
 	{
 		if(!parent_->ios_.contains(tid))
 			throw std::runtime_error(std::format("No IO defined for type \"{}\"", tid.name()));
@@ -603,7 +603,7 @@ namespace okayply
 		return it->second;
 	}
 
-	prop & elem::operator()(std::span<std::string_view const> names)
+	inline prop & elem::operator()(std::span<std::string_view const> names)
 	{
 		for(auto const & n : names)
 			if(has(n))
@@ -614,16 +614,16 @@ namespace okayply
 		throw std::runtime_error(std::format("Element does not contain property \"{}\"", s));
 	}
 
-	std::size_t elem::size() const
+	inline std::size_t elem::size() const
 	{
 		return size_;
 	}
-	std::string_view elem::name() const
+	inline std::string_view elem::name() const
 	{
 		return parent_->names_.at(this);
 	}
 
-	void elem::del(std::string_view n)
+	inline void elem::del(std::string_view n)
 	{
 		auto it = properties_.find(std::string(n));
 		if(it == properties_.end())
@@ -641,7 +641,7 @@ namespace okayply
 	}
 
 	template<format ff, std::endian ee>
-	void elem::write(std::ostream & out) const
+	inline void elem::write(std::ostream & out) const
 	{
 		std::size_t np = order_.size();
 		std::vector<const type *> ios(np); // serializer & deserializer for each property
@@ -678,7 +678,7 @@ namespace okayply
 	}
 
 	template<format ff, std::endian ee>
-	void elem::read(std::istream & in)
+	inline void elem::read(std::istream & in)
 	{
 		std::size_t np = order_.size();
 		std::vector<const type *> ios(np); // serializer & deserializer for each property
@@ -710,19 +710,19 @@ namespace okayply
 	// Root
 	// ---------------------------------------------------------------
 
-	bool root::has(std::string_view en) const
+	inline bool root::has(std::string_view en) const
 	{
 		return elements_.contains(std::string(en));
 	}
 
-	bool root::has(std::string_view en, std::string_view pn) const
+	inline bool root::has(std::string_view en, std::string_view pn) const
 	{
 		if(!elements_.contains(std::string(en)))
 			return false;
 		return elements_.at(std::string(en)).has(pn);
 	}
 
-	void root::del(std::string_view n)
+	inline void root::del(std::string_view n)
 	{
 		auto it = elements_.find(std::string(n));
 		if(it == elements_.end())
@@ -739,7 +739,7 @@ namespace okayply
 		}
 	}
 
-	std::vector<std::reference_wrapper<elem>> root::elements()
+	inline std::vector<std::reference_wrapper<elem>> root::elements()
 	{
 		std::vector<std::reference_wrapper<elem>> info;
 		for(auto & [n, e] : elements_)
@@ -747,7 +747,7 @@ namespace okayply
 		return info;
 	}
 
-	std::vector<std::string> root::names() const
+	inline std::vector<std::string> root::names() const
 	{
 		std::vector<std::string> info;
 		for(auto & [n, e] : elements_)
@@ -755,17 +755,17 @@ namespace okayply
 		return info;
 	}
 
-	char root::lineSeperator(char newLinesep)
+	inline char root::lineSeperator(char newLinesep)
 	{
 		std::swap(linesep_, newLinesep);
 		return newLinesep;
 	}
 
-	std::vector<std::string> & root::comments()
+	inline std::vector<std::string> & root::comments()
 	{
 		return comments_;
 	}
-	elem & root::operator()(std::string_view name, std::size_t size)
+	inline elem & root::operator()(std::string_view name, std::size_t size)
 	{
 		auto [it, inserted] = elements_.try_emplace(std::string(name));
 		if(inserted)
@@ -777,14 +777,14 @@ namespace okayply
 		}
 		return it->second;
 	}
-	elem & root::operator()(std::string_view name)
+	inline elem & root::operator()(std::string_view name)
 	{
 		if(!elements_.contains(std::string(name)))
 			throw std::runtime_error("cannot access non initialized element");
 		// this could be partial initialization without size, but then the size needs to come from "somewhere"...
 		return elements_[std::string(name)];
 	}
-	elem const & root::operator()(std::string_view name) const
+	inline elem const & root::operator()(std::string_view name) const
 	{
 		if(!elements_.contains(std::string(name)))
 			throw std::runtime_error("cannot access non initialized element");
@@ -792,7 +792,7 @@ namespace okayply
 		return elements_.at(std::string(name));
 	}
 
-	template<typename T, template<typename, bool> typename CustomIO> void root::registerType()
+	template<typename T, template<typename, bool> typename CustomIO> inline void root::registerType()
 	{
 		ios_.insert({typeid(T),std::make_unique<CustomIO<T, false>>()});
 		info_.insert({typeid(T),std::make_unique<internal::ErasedInfo<T, false>>()});
@@ -802,7 +802,7 @@ namespace okayply
 		anyvec_.insert({typeid(std::vector<T>), [] (std::size_t s) { return std::vector<std::vector<T>>(s); }});
 	}
 
-	std::type_index root::typeidFromStr(std::string_view s, bool isList)
+	inline std::type_index root::typeidFromStr(std::string_view s, bool isList)
 	{
 		for(auto const & [tid, ios] : ios_)
 			for(auto & sw : ios->names())
@@ -810,7 +810,7 @@ namespace okayply
 		return typeid(void);
 	}
 
-	void root::read(std::string const & path)
+	inline void root::read(std::string const & path)
 	{
 		std::ifstream in(path, std::ios::binary | std::ios::in);
 		if(!in.good())
@@ -818,7 +818,7 @@ namespace okayply
 		read(in);
 	}
 
-	void root::read(std::istream & in)
+	inline void root::read(std::istream & in)
 	{
 		comments_.clear();
 		elements_.clear();
@@ -953,7 +953,7 @@ namespace okayply
 	}
 
 	template<format ff, std::endian ee>
-	void root::write(std::string const & path) const
+	inline void root::write(std::string const & path) const
 	{
 		std::ofstream out(path, std::ios::binary | std::ios::trunc | std::ios::out);
 		if(!out.good())
@@ -961,7 +961,7 @@ namespace okayply
 		write<ff, ee>(out);
 	}
 
-	std::string root::str() const
+	inline std::string root::str() const
 	{
 		std::ostringstream out;
 		write<format::ascii>(out);
@@ -969,7 +969,7 @@ namespace okayply
 	}
 
 	template<format ff, std::endian ee>
-	void root::write(std::ostream & out) const
+	inline void root::write(std::ostream & out) const
 	{
 		out << str::ply << linesep_;
 		out << str::format << " " << internal::formatName<ff, ee>() << " " << str::version << linesep_;
@@ -1187,7 +1187,7 @@ namespace okayply
 		};
 	}
 
-	root::root()
+	inline root::root()
 	{ // load default (ply 1.0) datatypes on construction.
 		registerType<float, internal::type_x>();
 		registerType<double, internal::type_x>();
